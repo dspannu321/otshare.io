@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Providers;
+
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        //
+    }
+
+    public function boot(): void
+    {
+        RateLimiter::for('redeem', function (Request $request) {
+            return Limit::perMinute(config('otshare.rate_limit_redeem', 15))->by($request->ip());
+        });
+        RateLimiter::for('shares_create', function (Request $request) {
+            return Limit::perMinute(config('otshare.rate_limit_shares_create', 30))->by($request->ip());
+        });
+        RateLimiter::for('upload', function (Request $request) {
+            return Limit::perMinute(config('otshare.rate_limit_upload', 20))->by($request->ip());
+        });
+        RateLimiter::for('download', function (Request $request) {
+            return Limit::perMinute(config('otshare.rate_limit_download', 30))->by($request->ip());
+        });
+        RateLimiter::for('confirm', function (Request $request) {
+            return Limit::perMinute(config('otshare.rate_limit_confirm', 20))->by($request->ip());
+        });
+    }
+}

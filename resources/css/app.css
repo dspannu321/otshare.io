@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* ---- otshare.io: violet + sky color scheme ---- */
+.otshare-bg {
+    background: #0a0a0b;
+    background-image:
+        radial-gradient(ellipse 100% 60% at 50% -30%, rgba(139, 92, 246, 0.08), transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 50%, rgba(14, 165, 233, 0.05), transparent 45%),
+        radial-gradient(ellipse 60% 40% at 0% 80%, rgba(139, 92, 246, 0.04), transparent 45%);
+}
+
+.otshare-card {
+    background: rgba(24, 24, 27, 0.85);
+    border: 1px solid rgba(63, 63, 70, 0.5);
+    border-radius: 1.25rem;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+        0 4px 24px -4px rgba(0, 0, 0, 0.35),
+        0 12px 48px -12px rgba(0, 0, 0, 0.2);
+}
+
+.otshare-upload-empty {
+    background: rgba(39, 39, 42, 0.35);
+    border: 2px dashed rgba(113, 113, 122, 0.6);
+    border-radius: 1rem;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.otshare-upload-empty:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(39, 39, 42, 0.5);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.06);
+}
+.otshare-upload-empty:focus-within {
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.08);
+}
+
+.otshare-upload-filled {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-radius: 1rem;
+    box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.06) inset;
+}
+
+@layer components {
+    .otshare-input {
+        @apply w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-zinc-100 placeholder-zinc-500;
+        @apply focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500/40 transition-all duration-200;
+    }
+    .otshare-btn-primary {
+        @apply w-full py-3.5 rounded-xl font-semibold text-white bg-violet-500 hover:bg-violet-400;
+        @apply focus:outline-none focus:ring-2 focus:ring-violet-400/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0b];
+        @apply disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200;
+    }
+    .otshare-btn-secondary {
+        @apply py-2.5 px-4 rounded-xl font-medium text-zinc-300 bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] transition-all duration-200;
+    }
+    .otshare-tab-active {
+        @apply bg-white/[0.08] text-violet-400 border border-white/[0.1] shadow-sm;
+    }
+    .otshare-tab-inactive {
+        @apply text-zinc-500 border border-transparent hover:text-zinc-300 hover:bg-white/[0.04] transition-colors duration-200;
+    }
+}
+
+/* Char boxes: single horizontal row, compact so 10–12 fit on one line */
+.otshare-charbox {
+    width: 2rem;
+    height: 2.5rem;
+    min-width: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    font-family: ui-monospace, monospace;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgb(244, 244, 245);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.otshare-charbox::placeholder {
+    color: rgb(113, 113, 122);
+}
+.otshare-charbox:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+@media (min-width: 640px) {
+    .otshare-charbox {
+        width: 2.25rem;
+        height: 2.75rem;
+        min-width: 2.25rem;
+        font-size: 1rem;
+    }
+}
