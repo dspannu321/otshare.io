@@ -5,6 +5,7 @@
 @source '../js/App.jsx';
 @source '../js/app.js';
 @source '../views/welcome.blade.php';
+@source '../views/errors/**/*.blade.php';
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
