@@ -1,0 +1,117 @@
+{
+    "info": {
+        "_postman_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "name": "otshare.io API v1",
+        "description": "Free tier: create with `POST /api/v1/share`, download via `POST /redeem` → `GET /download?token=` → `POST /download/confirm`.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        { "key": "base_url", "value": "http://127.0.0.1:8000" }
+    ],
+    "item": [
+        {
+            "name": "Create share",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 201) {",
+                            "    const j = pm.response.json();",
+                            "    pm.collectionVariables.set('pickup_code', j.pickup_code);",
+                            "    pm.test('pickup_code format', () => {",
+                            "        pm.expect(j.pickup_code).to.match(/^[A-Z0-9]{4}-[0-9]{6}$/);",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [{ "key": "Accept", "value": "application/json" }],
+                "body": {
+                    "mode": "formdata",
+                    "formdata": [
+                        {
+                            "key": "file",
+                            "type": "file",
+                            "src": [],
+                            "description": "Any file up to server max (default 100MB)."
+                        },
+                        {
+                            "key": "expires_at",
+                            "value": "2099-01-01T12:00:00.000Z",
+                            "type": "text",
+                            "description": "Replace with a real ISO time between +1 min and +7 days from now."
+                        },
+                        {
+                            "key": "max_downloads",
+                            "value": "1",
+                            "type": "text",
+                            "description": "Integer 1–5."
+                        }
+                    ]
+                },
+                "url": "{{base_url}}/api/v1/share",
+                "description": "Update `expires_at` before sending (Postman cannot auto-compute dynamic dates without a pre-request script)."
+            }
+        },
+        {
+            "name": "Redeem pickup code",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    const j = pm.response.json();",
+                            "    pm.collectionVariables.set('download_token', j.download_token);",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "Accept", "value": "application/json" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"pickup_code\": \"{{pickup_code}}\"\n}"
+                },
+                "url": "{{base_url}}/api/v1/redeem",
+                "description": "Run **Create share** first so `pickup_code` is set, or paste a code into the collection variable."
+            }
+        },
+        {
+            "name": "Download file",
+            "request": {
+                "method": "GET",
+                "header": [{ "key": "Accept", "value": "*/*" }],
+                "url": "{{base_url}}/api/v1/download?token={{download_token}}",
+                "description": "Run **Redeem** first to set `download_token`. Response is the raw file stream."
+            }
+        },
+        {
+            "name": "Confirm download",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "Accept", "value": "application/json" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"token\": \"{{download_token}}\",\n  \"success\": true\n}"
+                },
+                "url": "{{base_url}}/api/v1/download/confirm",
+                "description": "Call after the file was received successfully so the share's download count increases."
+            }
+        }
+    ]
+}

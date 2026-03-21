@@ -1,0 +1,75 @@
+@import 'tailwindcss';
+
+@source '../views/admin/**/*.blade.php';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+}
+
+/* Subtle grid for ops surfaces */
+.admin-ops-surface {
+    background-color: #060a12;
+    background-image:
+        radial-gradient(ellipse 100% 80% at 50% -40%, rgba(56, 189, 248, 0.12), transparent 55%),
+        radial-gradient(ellipse 60% 50% at 100% 0%, rgba(99, 102, 241, 0.08), transparent 45%),
+        linear-gradient(rgba(148, 163, 184, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.03) 1px, transparent 1px);
+    background-size:
+        auto,
+        auto,
+        48px 48px,
+        48px 48px;
+}
+
+.admin-stat-card {
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.admin-stat-card:hover {
+    border-color: rgba(56, 189, 248, 0.22);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.08) inset;
+}
+
+.admin-panel {
+    border-radius: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.65) 0%, rgba(8, 12, 22, 0.85) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+        0 24px 48px -24px rgba(0, 0, 0, 0.5);
+}
+
+.admin-table-wrap {
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+}
+
+.admin-table-wrap table tbody tr {
+    transition: background 0.12s ease;
+}
+
+.admin-table-wrap table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.04);
+}
+
+/* Ops tabs */
+.admin-tab {
+    @apply rounded-t-lg border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-slate-500 transition hover:text-slate-300 sm:px-4;
+}
+
+.admin-tab.admin-tab-active {
+    @apply border-sky-500/80 bg-white/[0.04] text-white;
+}
+
+button.admin-tab:focus-visible {
+    @apply outline-none ring-2 ring-sky-500/40 ring-offset-2 ring-offset-[#060a12];
+}

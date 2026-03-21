@@ -84,4 +84,31 @@ return [
     'rate_limit_download' => (int) env('OTSHARE_RATE_LIMIT_DOWNLOAD', 30),
     'rate_limit_confirm' => (int) env('OTSHARE_RATE_LIMIT_CONFIRM', 20),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin panel: secret for hidden dashboard (query ?key= or header X-Admin-Key)
+    | Also accepts keys created via `php artisan otshare:admin-create` (admins table).
+    |--------------------------------------------------------------------------
+    */
+    'admin_secret' => env('OTSHARE_ADMIN_SECRET', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin IP allowlist: comma-separated IPv4/IPv6 or CIDR (e.g. 203.0.113.0/24).
+    | Empty: non-production allows any IP; production requires this to be non-empty.
+    |--------------------------------------------------------------------------
+    */
+    'admin_allowed_ips' => array_values(array_filter(array_map('trim', explode(',', (string) env('OTSHARE_ADMIN_ALLOWED_IPS', ''))))),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin TOTP session lifetime (hours) after successful authenticator check
+    |--------------------------------------------------------------------------
+    |
+    | The admin area uses a separate browser session cookie that expires when the
+    | browser closes; this value only applies while that session stays open.
+    |
+    */
+    'admin_mfa_session_hours' => (int) env('OTSHARE_ADMIN_MFA_SESSION_HOURS', 12),
+
 ];

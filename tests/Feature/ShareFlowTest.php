@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Share;
-use App\Services\PickupCodeService;
-use App\Services\ShareTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -20,84 +18,117 @@ class ShareFlowTest extends TestCase
         Storage::fake(config('otshare.storage_disk', 'local'));
     }
 
-    public function test_full_share_upload_redeem_download_flow(): void
+    private function futureExpiresIso(int $minutesFromNow = 60): string
     {
-        $pickup = app(PickupCodeService::class);
-        $tokenService = app(ShareTokenService::class);
-
-        $create = $this->postJson('/api/v1/shares', []);
-        $create->assertStatus(201);
-        $shareId = $create->json('id');
-        $pickupCode = $create->json('pickup_code');
-        $uploadUrl = $create->json('upload_url');
-
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{4}-[0-9]{6}$/', $pickupCode);
-
-        $file = UploadedFile::fake()->create('secret.txt', 100, 'application/octet-stream');
-        $cryptoMeta = [
-            'wrapped_file_key' => base64_encode(random_bytes(64)),
-            'file_nonce' => base64_encode(random_bytes(12)),
-            'wrap_nonce' => base64_encode(random_bytes(12)),
-            'salt' => base64_encode(random_bytes(16)),
-        ];
-        $upload = $this->post($uploadUrl, [
-            'ciphertext' => $file,
-            'crypto_meta' => $cryptoMeta,
-            'kdf' => ['type' => 'argon2id'],
-            'original_name' => 'secret.txt',
-            'mime' => 'text/plain',
-        ]);
-        $upload->assertSuccessful();
-
-        $redeem = $this->postJson('/api/v1/redeem', ['pickup_code' => $pickupCode]);
-        $redeem->assertSuccessful();
-        $downloadToken = $redeem->json('download_token');
-        $this->assertNotEmpty($downloadToken);
-
-        $download = $this->get('/api/v1/download?token='.urlencode($downloadToken));
-        $download->assertSuccessful();
-
-        $confirm = $this->postJson('/api/v1/download/confirm', [
-            'token' => $downloadToken,
-            'success' => true,
-        ]);
-        $confirm->assertSuccessful();
+        return now()->addMinutes($minutesFromNow)->toIso8601String();
     }
 
-    public function test_passcode_failure_exhaustion_deletes_file(): void
+    public function test_create_share_single_step_returns_pickup_code(): void
     {
-        $pickup = app(PickupCodeService::class);
-        $tokenService = app(ShareTokenService::class);
+        $file = UploadedFile::fake()->create('plain.txt', 50, 'text/plain');
 
-        $share = Share::create([
-            'short_id' => 'PASS',
-            'pickup_hash' => $pickup->hash('PASS-111111'),
-            'expires_at' => now()->addHour(),
+        $res = $this->post('/api/v1/share', [
+            'file' => $file,
+            'expires_at' => $this->futureExpiresIso(90),
+            'max_downloads' => 2,
+        ], ['Accept' => 'application/json']);
+
+        $res->assertStatus(201);
+        $res->assertJsonStructure(['id', 'pickup_code', 'expires_at', 'size_bytes', 'original_name']);
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{4}-[0-9]{6}$/', $res->json('pickup_code'));
+
+        $share = Share::whereNotNull('object_key')->first();
+        $this->assertNotNull($share);
+        $this->assertSame(2, $share->max_downloads);
+        $this->assertSame([], $share->crypto_meta);
+        $this->assertNull($share->kdf);
+    }
+
+    public function test_create_share_rejects_max_downloads_above_five(): void
+    {
+        $file = UploadedFile::fake()->create('a.txt', 10);
+
+        $res = $this->post('/api/v1/share', [
+            'file' => $file,
+            'expires_at' => $this->futureExpiresIso(60),
+            'max_downloads' => 6,
+        ], ['Accept' => 'application/json']);
+
+        $res->assertStatus(422);
+        $res->assertJsonValidationErrors('max_downloads');
+    }
+
+    public function test_create_share_rejects_expiry_too_soon(): void
+    {
+        $file = UploadedFile::fake()->create('a.txt', 10);
+
+        $res = $this->post('/api/v1/share', [
+            'file' => $file,
+            'expires_at' => now()->addSeconds(30)->toIso8601String(),
             'max_downloads' => 1,
-        ]);
-        $objectKey = 'shares/'.str_replace('-', '', $share->id).'/f.bin';
-        Storage::disk(config('otshare.storage_disk'))->put($objectKey, 'ciphertext');
-        $share->update(['object_key' => $objectKey]);
-        ['plain_token' => $token] = $tokenService->createForShare($share);
+        ], ['Accept' => 'application/json']);
 
-        $maxAttempts = config('otshare.max_passcode_attempts', 3);
-        for ($i = 0; $i < $maxAttempts; $i++) {
-            $res = $this->postJson('/api/v1/download/confirm', [
-                'token' => $token,
-                'success' => false,
-            ]);
-            $res->assertSuccessful();
-        }
-        $res = $this->postJson('/api/v1/download/confirm', [
+        $res->assertStatus(422);
+        $res->assertJsonValidationErrors('expires_at');
+    }
+
+    public function test_original_name_stored_from_uploaded_filename(): void
+    {
+        $file = UploadedFile::fake()->create('My Presentation (v2).pptx', 40);
+
+        $res = $this->post('/api/v1/share', [
+            'file' => $file,
+            'expires_at' => $this->futureExpiresIso(120),
+            'max_downloads' => 1,
+        ], ['Accept' => 'application/json']);
+
+        $res->assertStatus(201);
+        $share = Share::whereNotNull('object_key')->latest()->first();
+        $this->assertSame('My Presentation (v2).pptx', $share->original_name);
+    }
+
+    public function test_redeem_download_confirm_respects_max_downloads(): void
+    {
+        $file = UploadedFile::fake()->create('doc.txt', 20, 'text/plain');
+
+        $create = $this->post('/api/v1/share', [
+            'file' => $file,
+            'expires_at' => $this->futureExpiresIso(60),
+            'max_downloads' => 2,
+        ], ['Accept' => 'application/json']);
+
+        $create->assertStatus(201);
+        $pickup = $create->json('pickup_code');
+
+        $redeem = $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup]);
+        $redeem->assertOk();
+        $token = $redeem->json('download_token');
+        $this->assertNotEmpty($token);
+
+        $dl = $this->get('/api/v1/download?token='.urlencode($token));
+        $dl->assertOk();
+        $this->assertNotEmpty($dl->headers->get('Content-Disposition'));
+
+        $this->postJson('/api/v1/download/confirm', [
             'token' => $token,
-            'success' => false,
-        ]);
-        $res->assertSuccessful();
-        $res->assertJsonPath('expired', true);
-        $res->assertJsonPath('attempts_left', 0);
+            'success' => true,
+        ])->assertOk();
 
-        $share->refresh();
-        $this->assertNull($share->object_key);
-        $this->assertTrue($share->expires_at->isPast());
+        $share = Share::whereNotNull('object_key')->first();
+        $this->assertSame(1, $share->fresh()->download_count);
+
+        $redeem2 = $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup]);
+        $redeem2->assertOk();
+        $token2 = $redeem2->json('download_token');
+        $this->get('/api/v1/download?token='.urlencode($token2))->assertOk();
+        $this->postJson('/api/v1/download/confirm', [
+            'token' => $token2,
+            'success' => true,
+        ])->assertOk();
+
+        $this->assertSame(2, $share->fresh()->download_count);
+
+        $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup])
+            ->assertStatus(422);
     }
 }

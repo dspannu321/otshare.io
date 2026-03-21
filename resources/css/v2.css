@@ -1,0 +1,472 @@
+@import 'flatpickr/dist/flatpickr.min.css';
+@import 'tailwindcss';
+
+@source '../js/v2/**/*.jsx';
+@source '../js/App.jsx';
+@source '../js/app.js';
+@source '../views/welcome.blade.php';
+
+@theme {
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+
+    --color-v2-canvas: #060a12;
+    --color-v2-surface: #0c1222;
+    --color-v2-surface-hover: #111a2e;
+    --color-v2-border: rgba(148, 163, 184, 0.14);
+    --color-v2-border-strong: rgba(56, 189, 248, 0.35);
+    --color-v2-accent: #38bdf8;
+    --color-v2-accent-soft: rgba(56, 189, 248, 0.12);
+    --color-v2-glow: rgba(56, 189, 248, 0.45);
+    --color-v2-success: #34d399;
+    --color-v2-danger: #f87171;
+}
+
+/* V2 layout shell — separate from legacy .otshare-* */
+.v2-shell {
+    min-height: 100vh;
+    background-color: var(--color-v2-canvas);
+    background-image:
+        radial-gradient(ellipse 120% 70% at 15% -30%, rgba(56, 189, 248, 0.14), transparent 55%),
+        radial-gradient(ellipse 90% 55% at 95% 20%, rgba(99, 102, 241, 0.1), transparent 50%),
+        radial-gradient(ellipse 70% 45% at 50% 110%, rgba(14, 165, 233, 0.06), transparent 45%);
+}
+
+.v2-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+}
+
+.v2-card {
+    background: linear-gradient(
+        165deg,
+        rgba(15, 22, 41, 0.92) 0%,
+        rgba(10, 16, 30, 0.88) 100%
+    );
+    border: 1px solid var(--color-v2-border);
+    border-radius: 1.5rem;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+        0 24px 64px -24px rgba(0, 0, 0, 0.55),
+        0 0 80px -40px rgba(56, 189, 248, 0.15);
+    backdrop-filter: blur(16px);
+}
+
+.v2-dropzone {
+    border-radius: 1.125rem;
+    border: 2px dashed rgba(148, 163, 184, 0.22);
+    background: rgba(12, 18, 34, 0.5);
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+}
+
+.v2-dropzone:hover {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(17, 26, 46, 0.65);
+    box-shadow: 0 0 0 4px var(--color-v2-accent-soft);
+}
+
+.v2-dropzone-active {
+    border-color: var(--color-v2-border-strong);
+    background: rgba(56, 189, 248, 0.08);
+    box-shadow: 0 0 0 4px var(--color-v2-accent-soft);
+}
+
+.v2-input {
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid var(--color-v2-border);
+    background: rgba(6, 10, 18, 0.6);
+    padding: 0.875rem 1rem;
+    font-size: 0.9375rem;
+    color: #f1f5f9;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.v2-input::placeholder {
+    color: #64748b;
+}
+
+.v2-input:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.v2-btn-primary {
+    display: inline-flex;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.875rem;
+    padding: 0.9375rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: #04202e;
+    background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 45%, #0ea5e9 100%);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.2) inset,
+        0 8px 32px -8px var(--color-v2-glow);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+}
+
+.v2-btn-primary:hover:not(:disabled) {
+    filter: brightness(1.05);
+    box-shadow:
+        0 2px 0 rgba(255, 255, 255, 0.25) inset,
+        0 12px 40px -8px var(--color-v2-glow);
+    transform: translateY(-1px);
+}
+
+.v2-btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.v2-btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.v2-btn-ghost {
+    border-radius: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+    border: 1px solid transparent;
+    transition:
+        color 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.v2-btn-ghost:hover {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(148, 163, 184, 0.12);
+}
+
+@keyframes v2-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.v2-animate-in {
+    animation: v2-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.v2-code-block {
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: rgba(6, 10, 18, 0.8);
+    padding: 1rem 1.125rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.55;
+    color: #cbd5e1;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* Flatpickr — dark theme aligned with v2 (sky accent on ink) */
+.flatpickr-calendar.v2-flatpickr {
+    z-index: 10050;
+    font-family: var(--font-sans);
+    /* Default Flatpickr width ~308px is tight for 7 columns; widen so cells aren’t crushed at the edge */
+    width: 21rem;
+    max-width: min(21rem, calc(100vw - 1.5rem));
+    background: linear-gradient(165deg, rgba(15, 22, 41, 0.98) 0%, rgba(8, 12, 22, 0.98) 100%);
+    border: 1px solid var(--color-v2-border);
+    border-radius: 1rem;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+        0 24px 64px -12px rgba(0, 0, 0, 0.65),
+        0 0 48px -20px rgba(56, 189, 248, 0.2);
+    color: #e2e8f0;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-rContainer {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.flatpickr-calendar.v2-flatpickr .dayContainer {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-months {
+    padding: 0.5rem 0.75rem 0;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month span.cur-month {
+    color: #f8fafc;
+}
+
+/* Year is a real <input>; browsers default to dark text — force light like the month control */
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month input.cur-year {
+    color: #f8fafc;
+    -webkit-text-fill-color: #f8fafc;
+    caret-color: #38bdf8;
+    font-weight: 600;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month input.cur-year[disabled],
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month input.cur-year[disabled]:hover {
+    color: #f8fafc;
+    -webkit-text-fill-color: #f8fafc;
+    opacity: 0.92;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month .flatpickr-monthDropdown-months {
+    color: #f8fafc;
+    background-color: rgba(10, 14, 26, 0.98);
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month .numInputWrapper span.arrowUp:after {
+    border-bottom-color: #94a3b8;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+    border-top-color: #94a3b8;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-prev-month,
+.flatpickr-calendar.v2-flatpickr .flatpickr-next-month {
+    fill: #94a3b8;
+    padding: 0.35rem;
+    border-radius: 0.5rem;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-prev-month:hover,
+.flatpickr-calendar.v2-flatpickr .flatpickr-next-month:hover {
+    fill: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-innerContainer {
+    box-sizing: border-box;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-weekdays {
+    padding: 0 0.35rem;
+    box-sizing: border-box;
+}
+
+.flatpickr-calendar.v2-flatpickr span.flatpickr-weekday {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-days {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    padding: 0.35rem 0.35rem 0.45rem;
+    box-sizing: border-box;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-day {
+    border-radius: 0.5rem;
+    color: #cbd5e1;
+    border: none;
+    max-width: none; /* default 39px cap fights a wider calendar */
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-day:hover {
+    background: rgba(56, 189, 248, 0.12);
+    color: #f1f5f9;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.today {
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #7dd3fc;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.selected,
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.startRange,
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.endRange {
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    color: #04202e;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 4px 14px -4px rgba(56, 189, 248, 0.5);
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.flatpickr-disabled,
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.prevMonthDay,
+.flatpickr-calendar.v2-flatpickr .flatpickr-day.nextMonthDay {
+    color: #475569;
+}
+
+/*
+ * Flatpickr defaults: .hasTime .flatpickr-time { height: 40px } + max-height: 40px + overflow: hidden.
+ * Extra padding inside that box squishes hour/minute — undo the fixed bar for v2 and space with flex.
+ */
+.flatpickr-calendar.v2-flatpickr.hasTime .flatpickr-time {
+    height: auto;
+    max-height: none;
+    line-height: normal;
+    overflow: visible;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time {
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    background: rgba(6, 10, 18, 0.45);
+    border-radius: 0 0 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem 0.65rem;
+    box-sizing: border-box;
+    gap: 0.35rem;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .numInputWrapper {
+    float: none;
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 2.25rem;
+    max-height: none;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time.time24hr .numInputWrapper {
+    width: 3rem;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time input {
+    color: #f1f5f9;
+    font-weight: 500;
+    box-shadow: none;
+    height: 2.25rem;
+    line-height: 2.25rem;
+    padding: 0 0.25rem;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .flatpickr-time-separator,
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .flatpickr-am-pm {
+    float: none;
+    height: auto;
+    line-height: 2.25rem;
+    width: auto;
+    flex: 0 0 auto;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .flatpickr-am-pm {
+    color: #94a3b8;
+    min-width: 2.5rem;
+    padding: 0 0.25rem;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .flatpickr-am-pm:hover,
+.flatpickr-calendar.v2-flatpickr .flatpickr-time .flatpickr-am-pm:focus {
+    background: rgba(56, 189, 248, 0.15);
+    color: #e2e8f0;
+}
+
+.flatpickr-calendar.v2-flatpickr .flatpickr-time input:hover,
+.flatpickr-calendar.v2-flatpickr .flatpickr-time input:focus {
+    background: rgba(56, 189, 248, 0.08);
+}
+
+.v2-expiry-input.flatpickr-input {
+    cursor: pointer;
+}
+
+.v2-dl-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    background: rgba(6, 10, 18, 0.45);
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #94a3b8;
+    transition:
+        border-color 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.v2-dl-btn:hover {
+    border-color: rgba(56, 189, 248, 0.25);
+    color: #cbd5e1;
+    background: rgba(17, 26, 46, 0.65);
+}
+
+.v2-dl-btn-active {
+    border-color: rgba(56, 189, 248, 0.45);
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2) inset;
+}
+
+.v2-dl-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+}
+
+/* Pickup code boxes (v2 download) */
+.v2-charbox {
+    width: 2rem;
+    height: 2.75rem;
+    min-width: 2rem;
+    text-align: center;
+    font-size: 0.95rem;
+    font-family: var(--font-mono);
+    border-radius: 0.625rem;
+    background: rgba(6, 10, 18, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    color: #f1f5f9;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.v2-charbox::placeholder {
+    color: #64748b;
+}
+
+.v2-charbox:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+@media (min-width: 640px) {
+    .v2-charbox {
+        width: 2.25rem;
+        height: 3rem;
+        min-width: 2.25rem;
+        font-size: 1rem;
+    }
+}

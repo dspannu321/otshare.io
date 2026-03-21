@@ -263,8 +263,11 @@ export async function decryptFile(ciphertext, passcode, crypto_meta, kdf = null)
 export function downloadBlob(blob, filename) {
   const safe = (filename || 'download').replace(/[^\w\s.-]/gi, '_').slice(0, 255) || 'download';
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(blob);
+  a.href = url;
   a.download = safe;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2500);
 }

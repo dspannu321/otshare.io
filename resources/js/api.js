@@ -1,22 +1,27 @@
 /**
- * Central API client for otshare.io v1.
- * All requests use JSON where applicable and consistent error handling.
+ * Central API client for otshare.io v1 (free tier — plaintext storage).
  */
-
-const JSON_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
 
 /**
  * @param {string} apiBase - e.g. /api/v1
- * @returns {Promise<{ id: string, pickup_code: string, expires_at: string, upload_url: string }>}
+ * @param {{
+ *   file: File | Blob,
+ *   expiresAtIso: string,
+ *   maxDownloads: number,
+ *   fileName?: string,
+ * }} params
  */
-export async function createShare(apiBase) {
-  const res = await fetch(`${apiBase}/shares`, {
+export async function createShareWithFile(apiBase, params) {
+  const form = new FormData();
+  const name = params.fileName ?? (params.file instanceof File ? params.file.name : 'upload.bin');
+  form.append('file', params.file, name);
+  form.append('expires_at', params.expiresAtIso);
+  form.append('max_downloads', String(params.maxDownloads));
+
+  const res = await fetch(`${apiBase}/share`, {
     method: 'POST',
-    headers: JSON_HEADERS,
-    body: JSON.stringify({}),
+    headers: { Accept: 'application/json' },
+    body: form,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -26,72 +31,63 @@ export async function createShare(apiBase) {
   return data;
 }
 
-/**
- * @param {string} uploadUrl - Full URL from createShare
- * @param {{ ciphertext: Blob, crypto_meta: object, kdf: object, original_name: string, mime: string }} payload
- */
-export async function uploadShare(uploadUrl, payload) {
-  const form = new FormData();
-  form.append('crypto_meta', JSON.stringify(payload.crypto_meta));
-  form.append('kdf', JSON.stringify(payload.kdf));
-  form.append('original_name', payload.original_name ?? '');
-  form.append('mime', payload.mime ?? 'application/octet-stream');
-  form.append('ciphertext', payload.ciphertext, 'ciphertext.bin');
-  const res = await fetch(uploadUrl, { method: 'POST', body: form });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
-    throw new Error(msg || 'Upload failed.');
-  }
-  return data;
+/** @param {string} combined - 10 chars: 4 alnum + 6 digits (no dash) */
+export function formatPickupCodeForApi(combined) {
+  const c = (combined || '').replace(/\s/g, '').replace(/-/g, '').toUpperCase();
+  if (c.length < 10) return '';
+  return `${c.slice(0, 4)}-${c.slice(4, 10)}`;
 }
 
 /**
- * @param {string} apiBase
- * @param {string} pickupCode - e.g. K7P4-839217
- * @returns {Promise<{ download_token: string, expires_at: string, crypto_meta: object, kdf: object, original_name: string, mime: string, size_bytes: number }>}
+ * @param {string} apiBase - e.g. /api/v1
+ * @param {string} pickupCode - formatted XXXX-XXXXXX or 10-char combined
  */
-export async function redeem(apiBase, pickupCode) {
+export async function redeemPickupCode(apiBase, pickupCode) {
+  const formatted =
+    pickupCode.includes('-') ? pickupCode.replace(/\s/g, '') : formatPickupCodeForApi(pickupCode);
   const res = await fetch(`${apiBase}/redeem`, {
     method: 'POST',
-    headers: JSON_HEADERS,
-    body: JSON.stringify({ pickup_code: pickupCode.replace(/\s/g, '').trim() }),
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ pickup_code: formatted }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const msg = data.errors?.pickup_code?.[0] ?? data.message ?? 'Invalid or expired code.';
-    throw new Error(msg);
+    const msg = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+    throw new Error(msg || `Could not redeem code (${res.status}).`);
   }
   return data;
 }
 
 /**
  * @param {string} apiBase
- * @param {string} token - download_token from redeem
- * @returns {Promise<ArrayBuffer>} ciphertext
+ * @param {string} token - plain download_token from redeem
  */
-export async function download(apiBase, token) {
-  const res = await fetch(`${apiBase}/download?token=${encodeURIComponent(token)}`);
+export async function downloadShareBlob(apiBase, token) {
+  const url = `${apiBase}/download?token=${encodeURIComponent(token)}`;
+  const res = await fetch(url, { headers: { Accept: '*/*' } });
+  const ct = res.headers.get('Content-Type') || '';
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message ?? 'Download failed.');
+    const data = ct.includes('json') ? await res.json().catch(() => ({})) : {};
+    const msg = data.message || `Download failed (${res.status}).`;
+    throw new Error(msg);
   }
-  return res.arrayBuffer();
+  return res.blob();
 }
 
 /**
  * @param {string} apiBase
  * @param {string} token
- * @param {boolean} success
- * @returns {Promise<{ message: string, attempts_left?: number, expired?: boolean }>}
+ * @param {boolean} success - true after plaintext file saved; false only for legacy decrypt failure paths
  */
 export async function confirmDownload(apiBase, token, success) {
   const res = await fetch(`${apiBase}/download/confirm`, {
     method: 'POST',
-    headers: JSON_HEADERS,
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ token, success }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message ?? 'Confirm failed.');
+  if (!res.ok) {
+    throw new Error(data.message || `Confirm failed (${res.status}).`);
+  }
   return data;
 }

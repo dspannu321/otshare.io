@@ -6,12 +6,13 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use PragmaRX\Google2FA\Google2FA;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(Google2FA::class, fn () => new Google2FA);
     }
 
     public function boot(): void
