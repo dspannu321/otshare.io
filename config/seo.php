@@ -25,6 +25,9 @@ return [
     /** Bing Webmaster — optional */
     'ms_validate' => env('SEO_MS_VALIDATE'),
 
+    /** GA4 Measurement ID (loaded only in production after consent) */
+    'ga4_measurement_id' => env('GA4_MEASUREMENT_ID'),
+
     /*
     |--------------------------------------------------------------------------
     | Per-path SEO (server-rendered for / and /download)

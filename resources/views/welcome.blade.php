@@ -11,6 +11,8 @@
     $ogH = config('seo.og_image_height', 630);
     $twitterHandle = config('seo.twitter_handle');
     $themeColor = config('seo.theme_color', '#060a12');
+    $ga4Id = config('seo.ga4_measurement_id');
+    $ga4Enabled = app()->environment('production') && is_string($ga4Id) && $ga4Id !== '';
     $jsonLd = [
         '@context' => 'https://schema.org',
         '@graph' => [
@@ -100,5 +102,81 @@
 </head>
 <body class="min-h-screen font-sans text-slate-200 antialiased">
     <div id="otshare-root"></div>
+    @if ($ga4Enabled)
+        <div id="analytics-consent-banner" class="fixed inset-x-0 bottom-0 z-50 hidden border-t border-white/10 bg-[#0b1120]/95 backdrop-blur">
+            <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+                <p class="text-sm text-slate-300">
+                    We use analytics to understand traffic and improve otshare. Accept analytics cookies?
+                </p>
+                <div class="flex items-center gap-2">
+                    <button id="analytics-consent-decline" type="button" class="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/5">
+                        Decline
+                    </button>
+                    <button id="analytics-consent-accept" type="button" class="rounded-lg bg-sky-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-sky-400">
+                        Accept
+                    </button>
+                </div>
+            </div>
+        </div>
+        <script>
+            (function () {
+                const KEY = 'otshare_analytics_consent';
+                const ACCEPTED = 'granted';
+                const DENIED = 'denied';
+                const id = @json($ga4Id);
+                const banner = document.getElementById('analytics-consent-banner');
+
+                function hideBanner() {
+                    if (banner) banner.classList.add('hidden');
+                }
+
+                function showBanner() {
+                    if (banner) banner.classList.remove('hidden');
+                }
+
+                function loadGa() {
+                    if (!id || window.__otshareGaLoaded) return;
+                    window.__otshareGaLoaded = true;
+                    window.dataLayer = window.dataLayer || [];
+                    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+                    window.gtag('js', new Date());
+                    window.gtag('config', id, { anonymize_ip: true });
+
+                    const s = document.createElement('script');
+                    s.async = true;
+                    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+                    document.head.appendChild(s);
+                }
+
+                const value = localStorage.getItem(KEY);
+                if (value === ACCEPTED) {
+                    hideBanner();
+                    loadGa();
+                } else if (value === DENIED) {
+                    hideBanner();
+                } else {
+                    showBanner();
+                }
+
+                const acceptBtn = document.getElementById('analytics-consent-accept');
+                const declineBtn = document.getElementById('analytics-consent-decline');
+
+                if (acceptBtn) {
+                    acceptBtn.addEventListener('click', function () {
+                        localStorage.setItem(KEY, ACCEPTED);
+                        hideBanner();
+                        loadGa();
+                    });
+                }
+
+                if (declineBtn) {
+                    declineBtn.addEventListener('click', function () {
+                        localStorage.setItem(KEY, DENIED);
+                        hideBanner();
+                    });
+                }
+            })();
+        </script>
+    @endif
 </body>
 </html>

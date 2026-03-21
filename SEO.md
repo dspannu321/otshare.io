@@ -17,6 +17,7 @@ Organic growth depends on **relevance**, **quality**, **technical health**, and 
 | Open Graph + Twitter Card tags | Done | Set `SEO_OG_IMAGE` for large previews |
 | JSON-LD (`WebSite` + `WebApplication`) | Done | In `welcome.blade.php` |
 | `theme-color`, favicon (`favicon.svg`) | Done | `public/favicon.svg` |
+| GA4 (prod-only, consent-gated) | Done | `GA4_MEASUREMENT_ID` + consent banner in `welcome.blade.php` |
 | Admin area `noindex` | Done | e.g. admin login |
 | Error pages `noindex` | Done | `resources/views/errors/layout.blade.php` |
 
@@ -28,6 +29,7 @@ Organic growth depends on **relevance**, **quality**, **technical health**, and 
 2. **`SEO_OG_IMAGE`** — Full absolute URL to a **1200×630** PNG or JPG (not SVG) for Facebook/LinkedIn-quality previews. Host it on your domain or CDN.
 3. **`SEO_TWITTER_HANDLE`** — Username **without** `@`.
 4. **`SEO_GOOGLE_SITE_VERIFICATION`** / **`SEO_MS_VALIDATE`** — After claiming the site in Google Search Console and Bing Webmaster Tools.
+5. **`GA4_MEASUREMENT_ID`** — Your Google Analytics 4 ID (`G-...`). In this app it loads only in production and only after explicit consent.
 
 ---
 
