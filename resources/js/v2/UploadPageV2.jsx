@@ -17,7 +17,7 @@ export function UploadPageV2({ apiBase }) {
     const [expiryAt, setExpiryAt] = useState(null);
     const [maxDownloads, setMaxDownloads] = useState(1);
     const [step, setStep] = useState('select');
-    const [pickupCode, setPickupCode] = useState('');
+    const [doneResult, setDoneResult] = useState(null);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -192,7 +192,7 @@ export function UploadPageV2({ apiBase }) {
                 <div className="rounded-2xl border border-white/[0.08] bg-black/25 p-5 sm:p-6">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Pickup code</p>
                     <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <code className="font-mono text-xl font-medium tracking-[0.2em] text-sky-300 sm:flex-1 sm:text-2xl">{pickupCode}</code>
+                        <code className="font-mono text-xl font-medium tracking-[0.2em] text-sky-300 sm:flex-1 sm:text-2xl">{doneResult.pickup_code}</code>
                         <button
                             type="button"
                             onClick={copyCode}
