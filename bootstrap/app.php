@@ -25,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
 
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeaders::class);
+        $middleware->appendToGroup('admin.web', \App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->alias([
             'security.headers' => \App\Http\Middleware\SecurityHeaders::class,
             'admin.ip' => \App\Http\Middleware\EnsureAdminAllowedIp::class,

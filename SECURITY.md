@@ -53,16 +53,18 @@ Configurable via `config/otshare.php` and env (e.g. `OTSHARE_RATE_LIMIT_REDEEM`)
 
 ### 3.2 Security Headers
 
-All API responses send:
+Web (public HTML), admin HTML, and API responses send:
 
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `Referrer-Policy: strict-origin-when-cross-origin`
-- `X-XSS-Protection: 1; mode=block`
-- `Permissions-Policy`: restrict geolocation, microphone, camera
-- `Strict-Transport-Security` (when request is HTTPS)
+- `Permissions-Policy`: restrictive defaults for powerful browser features
+- `Content-Security-Policy`: baseline policy for self-hosted assets, Google Fonts, and (when used) GA4 / Tag Manager endpoints
+- `Strict-Transport-Security` (when the request is HTTPS)
 
-Applied via `SecurityHeaders` middleware to the API prefix.
+`X-XSS-Protection` is intentionally omitted (deprecated; modern browsers ignore it).
+
+Applied via `SecurityHeaders` middleware on the `web` and `admin.web` stacks and the `/api/v1` route group. Toggle CSP with `SECURITY_CSP_ENABLED` in `.env` (see `config/security.php`).
 
 ### 3.3 Input Validation
 

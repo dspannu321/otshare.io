@@ -35,7 +35,7 @@ class ApiSecurityTest extends TestCase
         $response->assertHeader('X-Content-Type-Options', 'nosniff');
         $response->assertHeader('X-Frame-Options', 'DENY');
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->assertHeader('X-XSS-Protection', '1; mode=block');
+        $response->assertHeader('Content-Security-Policy');
     }
 
     public function test_create_share_does_not_leak_internal_secrets(): void
