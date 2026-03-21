@@ -470,6 +470,11 @@
     padding-bottom: 0.125rem;
 }
 
+.v2-pickup-mobile {
+    letter-spacing: 0.08em;
+    font-size: 1.05rem;
+}
+
 @media (max-width: 359px) {
     .v2-charbox {
         width: 1.5rem;

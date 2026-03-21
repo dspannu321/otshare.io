@@ -17,6 +17,8 @@ export function PickupCodeInputV2({ value, onChange, className = '' }) {
         onChange(a + b);
     };
 
+    const displayMobile = part1 + (part2 ? `-${part2}` : '');
+
     const handleChange = (i, char) => {
         const upper = (char || '').toUpperCase();
         if (i < 4 && upper && !/^[A-Z0-9]*$/.test(upper)) return;
@@ -59,28 +61,43 @@ export function PickupCodeInputV2({ value, onChange, className = '' }) {
     const chars = (part1 + part2).split('').concat(Array(10).fill('')).slice(0, 10);
 
     return (
-        <div className={`v2-pickup-wrap flex w-full max-w-full flex-nowrap items-center justify-center gap-px sm:gap-1 ${className}`} onPaste={handlePaste}>
-            {chars.map((c, i) => (
-                <span key={i} className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-                    {i === 4 && (
-                        <span className="w-3 text-center font-mono text-sm text-slate-500 sm:w-4 sm:text-base">-</span>
-                    )}
-                    <input
-                        ref={(el) => {
-                            refs.current[i] = el;
-                        }}
-                        type="text"
-                        inputMode={i < 4 ? 'text' : 'numeric'}
-                        autoComplete="off"
-                        maxLength={i === 0 ? 10 : 1}
-                        value={c}
-                        onChange={(e) => handleChange(i, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(i, e)}
-                        className="v2-charbox uppercase"
-                        aria-label={i < 4 ? `Code ${i + 1}` : `Digit ${i - 3}`}
-                    />
-                </span>
-            ))}
+        <div className={`w-full ${className}`}>
+            <input
+                type="text"
+                inputMode="text"
+                autoComplete="off"
+                maxLength={11}
+                value={displayMobile}
+                onChange={(e) => setCombined(e.target.value.replace(/\s/g, '').replace(/-/g, ''))}
+                onPaste={handlePaste}
+                placeholder="AB12-345678"
+                className="v2-input v2-pickup-mobile text-center font-mono uppercase sm:hidden"
+                aria-label="Pickup code"
+            />
+
+            <div className="v2-pickup-wrap hidden w-full max-w-full flex-nowrap items-center justify-center gap-px sm:flex sm:gap-1" onPaste={handlePaste}>
+                {chars.map((c, i) => (
+                    <span key={i} className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+                        {i === 4 && (
+                            <span className="w-3 text-center font-mono text-sm text-slate-500 sm:w-4 sm:text-base">-</span>
+                        )}
+                        <input
+                            ref={(el) => {
+                                refs.current[i] = el;
+                            }}
+                            type="text"
+                            inputMode={i < 4 ? 'text' : 'numeric'}
+                            autoComplete="off"
+                            maxLength={i === 0 ? 10 : 1}
+                            value={c}
+                            onChange={(e) => handleChange(i, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(i, e)}
+                            className="v2-charbox uppercase"
+                            aria-label={i < 4 ? `Code ${i + 1}` : `Digit ${i - 3}`}
+                        />
+                    </span>
+                ))}
+            </div>
         </div>
     );
 }
