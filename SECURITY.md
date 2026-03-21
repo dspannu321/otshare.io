@@ -66,6 +66,10 @@ Web (public HTML), admin HTML, and API responses send:
 
 Applied via `SecurityHeaders` middleware on the `web` and `admin.web` stacks and the `/api/v1` route group. Toggle CSP with `SECURITY_CSP_ENABLED` in `.env` (see `config/security.php`).
 
+### 3.2.1 Session cookie prefixes (optional)
+
+Enable `SESSION_COOKIE_HOST_PREFIX=true` in production so session names use **`__Host-`** (when `SESSION_PATH=/` and `SESSION_DOMAIN` is empty) or **`__Secure-`** (when a domain is set). Browsers enforce extra rules for these names (e.g. `__Host-` requires **Secure** and **Path=/**). Implemented via `App\Support\SessionCookieName` in `AppServiceProvider` and `ConfigureAdminSession`.
+
 ### 3.3 Input Validation
 
 - **Pickup code**: Required, max 32 chars, format `[A-Za-z0-9]{1,10}-[0-9]{1,10}` (no script or path chars).

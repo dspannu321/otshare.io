@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\SessionCookieName;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +16,7 @@ class ConfigureAdminSession
     public function handle(Request $request, Closure $next): Response
     {
         config([
-            'session.cookie' => 'otshare_admin_session',
+            'session.cookie' => SessionCookieName::prefixed('otshare_admin_session'),
             'session.expire_on_close' => true,
         ]);
 

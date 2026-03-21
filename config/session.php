@@ -214,4 +214,14 @@ return [
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cookie name prefix (__Host- / __Secure-)
+    |--------------------------------------------------------------------------
+    | When true, session cookie names get a standards-based prefix. __Host-
+    | requires path=/, no Domain attribute, and Secure cookies (HTTPS).
+    | If you set SESSION_DOMAIN, __Secure- is used instead of __Host-.
+    */
+    'cookie_host_prefix' => env('SESSION_COOKIE_HOST_PREFIX', false),
+
 ];

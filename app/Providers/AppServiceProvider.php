@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Support\SessionCookieName;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -17,6 +18,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        config([
+            'session.cookie' => SessionCookieName::prefixed((string) config('session.cookie')),
+        ]);
+
         RateLimiter::for('redeem', function (Request $request) {
             return Limit::perMinute(config('otshare.rate_limit_redeem', 15))->by($request->ip());
         });
