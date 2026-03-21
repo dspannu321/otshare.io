@@ -59,7 +59,7 @@ export function PickupCodeInputV2({ value, onChange, className = '' }) {
     const chars = (part1 + part2).split('').concat(Array(10).fill('')).slice(0, 10);
 
     return (
-        <div className={`flex flex-nowrap items-center justify-center gap-0.5 sm:gap-1 ${className}`} onPaste={handlePaste}>
+        <div className={`flex w-full max-w-full flex-nowrap items-center justify-center gap-px sm:gap-1 ${className}`} onPaste={handlePaste}>
             {chars.map((c, i) => (
                 <span key={i} className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                     {i === 4 && (

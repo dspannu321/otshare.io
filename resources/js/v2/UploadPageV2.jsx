@@ -26,8 +26,16 @@ export function UploadPageV2({ apiBase }) {
     const flatpickrRef = useRef(null);
 
     useEffect(() => {
+        if (step !== 'select') {
+            if (flatpickrRef.current) {
+                flatpickrRef.current.destroy();
+                flatpickrRef.current = null;
+            }
+            return;
+        }
+
         const el = expiryInputRef.current;
-        if (!el) return;
+        if (!el || flatpickrRef.current) return;
 
         const fp = flatpickr(el, {
             enableTime: true,
@@ -36,7 +44,8 @@ export function UploadPageV2({ apiBase }) {
             minuteIncrement: 1,
             allowInput: false,
             clickOpens: true,
-            defaultDate: null,
+            disableMobile: true,
+            defaultDate: expiryAt ?? null,
             onChange: (dates) => setExpiryAt(dates[0] ?? null),
             onOpen: (_dates, _str, instance) => {
                 instance.set('minDate', new Date(Date.now() + 60 * 1000));
@@ -49,10 +58,12 @@ export function UploadPageV2({ apiBase }) {
         flatpickrRef.current = fp;
 
         return () => {
-            fp.destroy();
-            flatpickrRef.current = null;
+            if (flatpickrRef.current === fp) {
+                fp.destroy();
+                flatpickrRef.current = null;
+            }
         };
-    }, []);
+    }, [step]);
 
     const handleFileChange = (e) => {
         const f = e.target.files?.[0];
@@ -126,6 +137,8 @@ export function UploadPageV2({ apiBase }) {
             const msg = err.message || '';
             if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
                 setError('Network error. Check your connection and try again.');
+            } else if (msg.includes('413')) {
+                setError('Upload rejected by server size limit. Try a smaller file.');
             } else if (msg.includes('crypto_meta') || msg.includes('ciphertext') || msg.includes('validation')) {
                 setError(msg);
             } else if (msg) {
@@ -149,7 +162,7 @@ export function UploadPageV2({ apiBase }) {
 
     if (step === 'uploading') {
         return (
-            <div className="v2-card p-8 sm:p-10">
+            <div className="v2-card p-6 sm:p-10">
                 <div className="flex flex-col items-center justify-center py-10">
                     <div className="relative mb-6 h-14 w-14">
                         <div className="absolute inset-0 rounded-2xl bg-sky-400/20 blur-xl" />
@@ -173,7 +186,7 @@ export function UploadPageV2({ apiBase }) {
 
     if (step === 'done') {
         return (
-            <div className="v2-card p-8 sm:p-10">
+            <div className="v2-card p-6 sm:p-10">
                 <div className="mb-8 flex gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-emerald-400/35 bg-emerald-400/10">
                         <svg className="h-7 w-7 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -240,7 +253,7 @@ export function UploadPageV2({ apiBase }) {
     }
 
     return (
-        <div className="v2-card p-8 sm:p-10">
+            <div className="v2-card p-6 sm:p-10">
             <h2 className="mb-8 text-lg font-bold text-white">Create a share</h2>
 
             <form onSubmit={submitHandler} className="space-y-6">
@@ -260,7 +273,7 @@ export function UploadPageV2({ apiBase }) {
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
-                            className={`v2-dropzone flex cursor-pointer flex-col items-center justify-center px-6 py-12 outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40 ${
+                            className={`v2-dropzone flex cursor-pointer flex-col items-center justify-center px-5 py-10 sm:px-6 sm:py-12 outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40 ${
                                 isDragging ? 'v2-dropzone-active' : ''
                             }`}
                         >
@@ -278,7 +291,7 @@ export function UploadPageV2({ apiBase }) {
                             <p className="mt-1 text-center text-sm text-slate-500">Any type · up to 100MB</p>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-4 rounded-2xl border border-sky-400/25 bg-sky-400/[0.07] p-4 ring-1 ring-sky-400/10">
+                        <div className="flex flex-col gap-3 rounded-2xl border border-sky-400/25 bg-sky-400/[0.07] p-4 ring-1 ring-sky-400/10 sm:flex-row sm:items-center sm:gap-4">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-400/15">
                                 <svg className="h-6 w-6 text-sky-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                     <path
@@ -299,7 +312,7 @@ export function UploadPageV2({ apiBase }) {
                                     e.preventDefault();
                                     fileInputRef.current?.click();
                                 }}
-                                className="shrink-0 text-sm font-semibold text-sky-300 hover:text-sky-200"
+                                className="w-full rounded-lg border border-sky-400/30 px-3 py-2 text-sm font-semibold text-sky-300 hover:border-sky-300/50 hover:text-sky-200 sm:w-auto sm:border-0 sm:p-0"
                             >
                                 Change
                             </button>

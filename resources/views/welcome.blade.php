@@ -6,9 +6,10 @@
     $canonical = url()->current();
     $title = $seoPage['title'].' — '.$siteName;
     $description = $seoPage['description'];
-    $ogImage = config('seo.og_image');
+    $ogImage = config('seo.og_image') ?: url('/og-default.svg');
     $ogW = config('seo.og_image_width', 1200);
     $ogH = config('seo.og_image_height', 630);
+    $ogType = str_ends_with(strtolower((string) $ogImage), '.svg') ? 'image/svg+xml' : 'image/png';
     $twitterHandle = config('seo.twitter_handle');
     $themeColor = config('seo.theme_color', '#060a12');
     $ga4Id = config('seo.ga4_measurement_id');
@@ -65,6 +66,7 @@
     <meta property="og:locale" content="{{ app()->getLocale() === 'en' ? 'en_US' : str_replace('-', '_', app()->getLocale()) }}">
     @if (! empty($ogImage))
         <meta property="og:image" content="{{ $ogImage }}">
+        <meta property="og:image:type" content="{{ $ogType }}">
         <meta property="og:image:width" content="{{ $ogW }}">
         <meta property="og:image:height" content="{{ $ogH }}">
         <meta property="og:image:alt" content="{{ $siteName }} — {{ $seoPage['title'] }}">

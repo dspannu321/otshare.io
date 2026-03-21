@@ -23,6 +23,9 @@ export async function createShareWithFile(apiBase, params) {
     headers: { Accept: 'application/json' },
     body: form,
   });
+  if (res.status === 413) {
+    throw new Error('Upload rejected: file exceeds server upload limit. Try a smaller file.');
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
