@@ -463,6 +463,22 @@
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
+/* Prevent clipping on narrow phones while keeping a clean centered row. */
+.v2-pickup-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.125rem;
+}
+
+@media (max-width: 359px) {
+    .v2-charbox {
+        width: 1.5rem;
+        height: 2.45rem;
+        min-width: 1.5rem;
+        font-size: 0.82rem;
+    }
+}
+
 @media (min-width: 640px) {
     .v2-charbox {
         width: 2.25rem;

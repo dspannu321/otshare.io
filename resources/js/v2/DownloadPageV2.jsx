@@ -115,7 +115,7 @@ export function DownloadPageV2({ apiBase }) {
 
     if (phase === 'done') {
         return (
-            <div className="v2-card p-6 sm:p-8 text-center">
+            <div className="v2-card p-5 sm:p-8 text-center">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-500/30 bg-emerald-500/10">
                     <svg className="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -136,25 +136,25 @@ export function DownloadPageV2({ apiBase }) {
 
         return (
             <div className="v2-card overflow-hidden p-0">
-                <div className="border-b border-white/[0.06] bg-black/20 px-5 py-4 sm:px-6">
+                <div className="border-b border-white/[0.06] bg-black/20 px-4 py-4 sm:px-6">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Your file</p>
-                    <p className="mt-1 break-all text-lg font-semibold text-white">{displayName}</p>
+                    <p className="mt-1 break-all text-base font-semibold text-white sm:text-lg">{displayName}</p>
                     <p className="mt-1 text-sm text-slate-500">
                         {formatFileSize(meta.size_bytes)}
                         {meta.mime ? ` · ${meta.mime}` : ''}
                     </p>
                     {meta.expires_at && (
-                        <p className="mt-2 text-xs text-slate-600">
-                            Download link valid until{' '}
+                        <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                            <span className="block sm:inline">Download link valid until </span>
                             <time className="font-mono text-slate-500" dateTime={meta.expires_at}>
                                 {formatInAppTimezone(meta.expires_at, { dateStyle: 'medium', timeStyle: 'medium' })}
-                            </time>{' '}
-                            <span className="text-slate-600">({getAppTimezone()})</span>
+                            </time>
+                            <span className="block text-slate-600 sm:inline sm:ml-1">({getAppTimezone()})</span>
                         </p>
                     )}
                 </div>
 
-                <div className="space-y-5 p-5 sm:p-6">
+                <div className="space-y-5 p-4 sm:p-6">
                     {isImage && previewLoading && (
                         <p className="text-center text-sm text-slate-500">Loading preview…</p>
                     )}
@@ -192,11 +192,12 @@ export function DownloadPageV2({ apiBase }) {
     }
 
     return (
-        <div className="v2-card p-6 sm:p-8">
+        <div className="v2-card p-5 sm:p-8">
             <form onSubmit={handleLookup} className="space-y-6">
                 <div>
                     <label className="mb-3 block text-center text-xs font-semibold uppercase tracking-wider text-slate-500">Pickup code</label>
                     <PickupCodeInputV2 value={code} onChange={setCode} className="justify-center" />
+                    <p className="mt-2 text-center text-xs text-slate-600">Format: 4 letters/numbers + 6 digits</p>
                 </div>
                 {error && (
                     <p className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-center text-sm text-rose-200/90" role="alert">
