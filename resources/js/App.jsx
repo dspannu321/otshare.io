@@ -36,11 +36,11 @@ export function App() {
                     <span className="text-base font-bold tracking-tight text-white sm:text-lg">otshare</span>
                 </a>
                 <nav className="flex w-full flex-wrap items-center justify-end gap-1.5 sm:w-auto sm:gap-2">
-                    <a href="/" className={navLinkClass(page === 'upload')}>
-                        Upload
+                    <a href="/app" className={navLinkClass(page === 'upload')}>
+                        Create
                     </a>
                     <a href="/download" className={navLinkClass(page === 'download')}>
-                        Download
+                        Unlock
                     </a>
                 </nav>
             </header>
@@ -81,6 +81,19 @@ export function App() {
             </main>
 
             <footer className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-2 px-5 py-5 text-center text-xs text-slate-600 sm:px-8">
+                <p>
+                    <a href="/" className="text-slate-500 underline decoration-slate-700 underline-offset-2 hover:text-slate-400">
+                        Home
+                    </a>
+                    <span className="mx-2 text-slate-700">·</span>
+                    <a href="/privacy" className="text-slate-500 underline decoration-slate-700 underline-offset-2 hover:text-slate-400">
+                        Privacy
+                    </a>
+                    <span className="mx-2 text-slate-700">·</span>
+                    <a href="/terms" className="text-slate-500 underline decoration-slate-700 underline-offset-2 hover:text-slate-400">
+                        Terms
+                    </a>
+                </p>
                 <span>Max 100MB · File or text · Up to 5 unlocks per share</span>
             </footer>
         </div>

@@ -1,9 +1,9 @@
 @php
     $isDownload = request()->is('download');
-    $pageKey = $isDownload ? 'download' : 'home';
+    $pageKey = $isDownload ? 'download' : 'app';
     $seoPage = config('seo.pages.'.$pageKey);
     $siteName = config('app.name', 'otshare.io');
-    $canonical = $isDownload ? url('/download') : url('/');
+    $canonical = $isDownload ? url('/download') : url('/app');
     $title = $seoPage['title'].' — '.$siteName;
     $description = $seoPage['description'];
     $ogImage = config('seo.og_image') ?: url('/og-default.svg');
@@ -27,7 +27,7 @@
             ],
             [
                 '@type' => 'WebApplication',
-                '@id' => url('/').'#webapp',
+                '@id' => $canonical.'#webapp',
                 'name' => $siteName,
                 'url' => $canonical,
                 'description' => $description,

@@ -5,6 +5,9 @@
 @source '../js/App.jsx';
 @source '../js/app.js';
 @source '../views/welcome.blade.php';
+@source '../views/landing.blade.php';
+@source '../views/legal-privacy.blade.php';
+@source '../views/legal-terms.blade.php';
 @source '../views/errors/**/*.blade.php';
 
 @theme {

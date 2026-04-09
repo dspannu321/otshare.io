@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class WebSecurityHeadersTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_public_home_sends_security_headers_and_csp(): void
     {
         $response = $this->get('/');

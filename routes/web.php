@@ -1,18 +1,23 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/llms.txt', [SeoController::class, 'llms'])->name('seo.llms');
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', LandingPageController::class)->name('landing');
+Route::view('/app', 'welcome')->name('app');
 Route::view('/download', 'welcome')->name('download');
+Route::view('/privacy', 'legal-privacy')->name('privacy');
+Route::view('/terms', 'legal-terms')->name('terms');
 
-Route::permanentRedirect('/v2', '/');
+Route::permanentRedirect('/v2', '/app');
 Route::permanentRedirect('/v2/download', '/download');
-Route::permanentRedirect('/v2/api', '/');
+Route::permanentRedirect('/v2/api', '/app');
 Route::permanentRedirect('/docs', '/');
 
 Route::middleware('admin.web')->group(function () {

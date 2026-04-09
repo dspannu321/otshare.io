@@ -20,11 +20,43 @@ class SeoController extends Controller
         ]);
     }
 
+    /**
+     * Optional hint file for AI / answer-engine crawlers (not a replacement for HTML content).
+     */
+    public function llms(): Response
+    {
+        $site = config('app.name', 'otshare.io');
+        $desc = config('seo.pages.landing.description', 'Temporary file and text sharing with pickup codes.');
+
+        $lines = [
+            '# '.$site,
+            '',
+            '> '.$desc,
+            '',
+            '## Pages',
+            '- '.url('/').' — Marketing / overview',
+            '- '.url('/app').' — Create a share (upload or text)',
+            '- '.url('/download').' — Unlock with a pickup code',
+            '- '.url('/privacy').' — Privacy',
+            '- '.url('/terms').' — Terms',
+            '',
+            '## API',
+            '- '.url('/api/v1').' — JSON API base (create share, redeem, download)',
+        ];
+
+        return response(implode("\n", $lines), 200, [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+        ]);
+    }
+
     public function sitemap(): Response
     {
         $urls = [
             ['loc' => url('/'), 'priority' => '1.0', 'changefreq' => 'weekly'],
+            ['loc' => url('/app'), 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['loc' => url('/download'), 'priority' => '0.9', 'changefreq' => 'weekly'],
+            ['loc' => url('/privacy'), 'priority' => '0.4', 'changefreq' => 'monthly'],
+            ['loc' => url('/terms'), 'priority' => '0.4', 'changefreq' => 'monthly'],
         ];
 
         $lastmod = now()->toAtomString();

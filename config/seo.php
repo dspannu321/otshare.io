@@ -30,19 +30,57 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Per-path SEO (server-rendered for / and /download)
+    | Per-path SEO (server-rendered)
     |--------------------------------------------------------------------------
     | Title is combined in views as: "{title} — {APP_NAME}" (keep title ≤ ~50 chars).
+    | / = marketing landing, /app = upload tool, /download = unlock page.
     */
     'pages' => [
-        'home' => [
-            'title' => 'Send files with a pickup code',
-            'description' => 'Upload a file (up to 100MB), set expiry and download limit, and share one pickup code. Recipients download in the browser — no account required.',
+        'landing' => [
+            'title' => 'Share files & text with a pickup code',
+            'description' => 'Send up to 100MB without an account: one pickup code, optional link or QR, expiry and download limits. Recipients unlock in the browser.',
+        ],
+        'app' => [
+            'title' => 'Create a share',
+            'description' => 'Upload a file or paste text, set expiry and how many unlocks allowed, then share your pickup code or link.',
         ],
         'download' => [
-            'title' => 'Download with a pickup code',
-            'description' => 'Enter your pickup code to download a file shared with otshare. Simple, timed links with a set number of downloads.',
+            'title' => 'Unlock with a pickup code',
+            'description' => 'Enter your pickup code or open your unlock link to download a file or copy shared text. Timed access with a set number of unlocks.',
         ],
+        'privacy' => [
+            'title' => 'Privacy',
+            'description' => 'How otshare handles data for temporary file and text sharing.',
+        ],
+        'terms' => [
+            'title' => 'Terms',
+            'description' => 'Terms of use for otshare.io.',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Legal pages — optional identity / contact (set in .env for production)
+    |--------------------------------------------------------------------------
+    */
+    'legal' => [
+        'last_updated' => env('LEGAL_LAST_UPDATED', 'April 8, 2026'),
+        'contact_email' => env('LEGAL_CONTACT_EMAIL'),
+        'operator_name' => env('LEGAL_OPERATOR_NAME'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Landing page aggregates (/ — optional marketing offsets + cache)
+    |--------------------------------------------------------------------------
+    | Totals are computed from the shares table. Extra_* values add to displayed
+    | numbers (e.g. legacy data before metrics). Set cache_seconds to 0 in tests.
+    */
+    'landing_stats' => [
+        'cache_seconds' => (int) env('LANDING_STATS_CACHE_SECONDS', 60),
+        'extra_shares' => (int) env('LANDING_STATS_EXTRA_SHARES', 0),
+        'extra_bytes' => (int) env('LANDING_STATS_EXTRA_BYTES', 0),
+        'extra_unlocks' => (int) env('LANDING_STATS_EXTRA_UNLOCKS', 0),
     ],
 
 ];
