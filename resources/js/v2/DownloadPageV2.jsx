@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { downloadBlob } from '../crypto';
 import { redeemPickupCode, downloadShareBlob, confirmDownload, formatPickupCodeForApi } from '../api';
-import { formatInAppTimezone, getAppTimezone } from '../appTz';
+import { formatInLocalTime, getLocalTimezoneLabel } from '../appTz';
 import { PickupCodeInputV2 } from './PickupCodeInputV2.jsx';
 
 const PREVIEW_MAX_BYTES = 8 * 1024 * 1024;
@@ -212,13 +212,13 @@ export function DownloadPageV2({ apiBase }) {
                         {formatFileSize(meta.size_bytes)}
                         {meta.mime ? ` · ${meta.mime}` : ''}
                     </p>
-                    {meta.expires_at && (
+                    {meta.share_expires_at && (
                         <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                            <span className="block sm:inline">{isText ? 'Unlock link valid until ' : 'Download link valid until '} </span>
-                            <time className="font-mono text-slate-500" dateTime={meta.expires_at}>
-                                {formatInAppTimezone(meta.expires_at, { dateStyle: 'medium', timeStyle: 'medium' })}
+                            <span className="block sm:inline">Share expires </span>
+                            <time className="font-mono text-slate-500" dateTime={meta.share_expires_at}>
+                                {formatInLocalTime(meta.share_expires_at, { dateStyle: 'medium', timeStyle: 'medium' })}
                             </time>
-                            <span className="block text-slate-600 sm:inline sm:ml-1">({getAppTimezone()})</span>
+                            <span className="block text-slate-600 sm:inline sm:ml-1">({getLocalTimezoneLabel()})</span>
                         </p>
                     )}
                 </div>

@@ -102,6 +102,12 @@ class ShareFlowTest extends TestCase
 
         $redeem = $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup]);
         $redeem->assertOk();
+        $redeem->assertJsonStructure(['download_token', 'expires_at', 'share_expires_at']);
+        $shareRow = Share::whereNotNull('object_key')->first();
+        $this->assertSame(
+            $shareRow->expires_at->toIso8601String(),
+            $redeem->json('share_expires_at')
+        );
         $token = $redeem->json('download_token');
         $this->assertNotEmpty($token);
 

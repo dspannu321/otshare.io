@@ -73,7 +73,10 @@ class RedeemController extends Controller
 
         return response()->json([
             'download_token' => $plainToken,
+            /** Short-lived session for GET /download + POST /download/confirm (see config otshare.token_expiry_minutes). */
             'expires_at' => $tokenModel->expires_at->toIso8601String(),
+            /** When the share itself expires (pickup code / file availability). */
+            'share_expires_at' => $share->expires_at->toIso8601String(),
             'crypto_meta' => $share->crypto_meta,
             'kdf' => $share->kdf,
             'original_name' => $share->original_name,

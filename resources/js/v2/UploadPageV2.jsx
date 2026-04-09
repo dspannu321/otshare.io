@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import flatpickr from 'flatpickr';
 import { createShareWithFile, createShareWithText } from '../api';
-import { formatInAppTimezone, getAppTimezone } from '../appTz';
+import { formatInLocalTime, getLocalTimezoneLabel } from '../appTz';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const MAX_EXPIRY_MINUTES = 7 * 24 * 60;
@@ -279,9 +279,9 @@ export function UploadPageV2({ apiBase }) {
                     <p className="mt-4 text-center text-sm text-slate-500">
                         Share expires{' '}
                         <time className="font-mono text-slate-400" dateTime={doneResult.expires_at}>
-                            {formatInAppTimezone(doneResult.expires_at, { dateStyle: 'medium', timeStyle: 'short' })}
+                            {formatInLocalTime(doneResult.expires_at, { dateStyle: 'medium', timeStyle: 'short' })}
                         </time>
-                        <span className="block text-xs text-slate-600">({getAppTimezone()})</span>
+                        <span className="block text-xs text-slate-600">({getLocalTimezoneLabel()})</span>
                     </p>
                 )}
 
