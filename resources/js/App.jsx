@@ -58,7 +58,7 @@ export function App() {
                                     Upload &amp; share
                                 </h1>
                                 <p className="mt-2 text-sm text-slate-400">
-                                    Pick a file, choose expiry and downloads — one pickup code for your recipient.
+                                    Share a file or text, choose expiry and unlocks — one pickup code or link for your recipient.
                                 </p>
                             </>
                         ) : (
@@ -68,7 +68,7 @@ export function App() {
                                     Have a pickup code?
                                 </p>
                                 <h1 className="text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl">
-                                    Download a file
+                                    Unlock a share
                                 </h1>
                             </>
                         )}
@@ -81,7 +81,7 @@ export function App() {
             </main>
 
             <footer className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-2 px-5 py-5 text-center text-xs text-slate-600 sm:px-8">
-                <span>Max 100MB · Up to 5 downloads per share</span>
+                <span>Max 100MB · File or text · Up to 5 unlocks per share</span>
             </footer>
         </div>
     );

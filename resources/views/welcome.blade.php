@@ -3,7 +3,7 @@
     $pageKey = $isDownload ? 'download' : 'home';
     $seoPage = config('seo.pages.'.$pageKey);
     $siteName = config('app.name', 'otshare.io');
-    $canonical = url()->current();
+    $canonical = $isDownload ? url('/download') : url('/');
     $title = $seoPage['title'].' — '.$siteName;
     $description = $seoPage['description'];
     $ogImage = config('seo.og_image') ?: url('/og-default.svg');

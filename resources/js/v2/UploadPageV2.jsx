@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import flatpickr from 'flatpickr';
 import { createShareWithFile, createShareWithText } from '../api';
 import { formatInLocalTime, getLocalTimezoneLabel } from '../appTz';
+import { buildUnlockUrl } from '../shareLink.js';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const MAX_EXPIRY_MINUTES = 7 * 24 * 60;
@@ -24,6 +25,8 @@ export function UploadPageV2({ apiBase }) {
     const [doneKind, setDoneKind] = useState(null);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
+    const [qrDataUrl, setQrDataUrl] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
     const expiryInputRef = useRef(null);
@@ -69,6 +72,35 @@ export function UploadPageV2({ apiBase }) {
         };
     }, [step]);
 
+    useEffect(() => {
+        if (step !== 'done' || !doneResult?.pickup_code) {
+            setQrDataUrl(null);
+            return;
+        }
+        const url = buildUnlockUrl(doneResult.pickup_code);
+        if (!url) {
+            return;
+        }
+        let cancelled = false;
+        import('qrcode')
+            .then(({ default: QRCode }) =>
+                QRCode.toDataURL(url, { margin: 2, width: 220, errorCorrectionLevel: 'M' })
+            )
+            .then((dataUrl) => {
+                if (!cancelled) {
+                    setQrDataUrl(dataUrl);
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    setQrDataUrl(null);
+                }
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [step, doneResult?.pickup_code]);
+
     const handleFileChange = (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
@@ -107,6 +139,24 @@ export function UploadPageV2({ apiBase }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (_) {}
+    };
+
+    const copyUnlockLink = async () => {
+        if (!doneResult?.pickup_code) return;
+        const url = buildUnlockUrl(doneResult.pickup_code);
+        if (!url) return;
+        try {
+            await navigator.clipboard.writeText(url);
+            setLinkCopied(true);
+            setTimeout(() => setLinkCopied(false), 2000);
+        } catch (_) {}
+    };
+
+    const openUnlockPage = () => {
+        if (!doneResult?.pickup_code) return;
+        const url = buildUnlockUrl(doneResult.pickup_code);
+        if (!url) return;
+        window.open(url, '_blank', 'noopener,noreferrer');
     };
 
     const submitHandler = async (e) => {
@@ -184,6 +234,8 @@ export function UploadPageV2({ apiBase }) {
         setDoneKind(null);
         setError('');
         setExpiryAt(null);
+        setLinkCopied(false);
+        setQrDataUrl(null);
         flatpickrRef.current?.clear();
     };
 
@@ -225,6 +277,7 @@ export function UploadPageV2({ apiBase }) {
     }
 
     if (step === 'done') {
+        const unlockUrl = buildUnlockUrl(doneResult.pickup_code);
         return (
             <div className="v2-card p-6 sm:p-10">
                 <div className="mb-8 flex gap-4">
@@ -268,12 +321,77 @@ export function UploadPageV2({ apiBase }) {
                                             d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
                                         />
                                     </svg>
-                                    Copy
+                                    Copy code
                                 </>
                             )}
                         </button>
                     </div>
                 </div>
+
+                {unlockUrl && (
+                    <div className="mt-5 rounded-2xl border border-white/[0.08] bg-black/25 p-5 sm:p-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Unlock link</p>
+                        <p className="mt-2 break-all font-mono text-xs leading-relaxed text-slate-400 sm:text-sm">{unlockUrl}</p>
+                        <p className="mt-3 text-xs leading-relaxed text-slate-600">
+                            Anyone with this link can open the unlock page until the share expires — same as sharing the code.
+                        </p>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                            <button
+                                type="button"
+                                onClick={copyUnlockLink}
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-400/10 px-4 py-3 text-sm font-semibold text-sky-200 transition hover:border-sky-400/40 hover:bg-sky-400/15"
+                            >
+                                {linkCopied ? (
+                                    <>
+                                        <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Link copied
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                            />
+                                        </svg>
+                                        Copy link
+                                    </>
+                                )}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={openUnlockPage}
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-white/20 hover:bg-white/[0.08]"
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                    />
+                                </svg>
+                                Open unlock page
+                            </button>
+                        </div>
+                        {qrDataUrl && (
+                            <div className="mt-6 flex flex-col items-center gap-2">
+                                <img
+                                    src={qrDataUrl}
+                                    width={220}
+                                    height={220}
+                                    className="rounded-xl border border-white/[0.08] bg-white p-3"
+                                    alt="QR code to open the unlock page"
+                                />
+                                <p className="text-center text-xs text-slate-500">Scan to open the unlock page on another device.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {doneResult.expires_at && (
                     <p className="mt-4 text-center text-sm text-slate-500">

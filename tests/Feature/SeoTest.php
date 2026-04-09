@@ -45,4 +45,12 @@ class SeoTest extends TestCase
         $response->assertSee('<link rel="canonical" href="'.e(url('/download')).'">', false);
         $response->assertSee('Download with a pickup code', false);
     }
+
+    public function test_download_page_with_query_string_has_canonical_without_query(): void
+    {
+        $response = $this->get('/download?code=AB12-345678');
+
+        $response->assertOk();
+        $response->assertSee('<link rel="canonical" href="'.e(url('/download')).'">', false);
+    }
 }

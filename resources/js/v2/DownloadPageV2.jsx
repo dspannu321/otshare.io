@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { downloadBlob } from '../crypto';
 import { redeemPickupCode, downloadShareBlob, confirmDownload, formatPickupCodeForApi } from '../api';
 import { formatInLocalTime, getLocalTimezoneLabel } from '../appTz';
+import { normalizePickupQueryToCombined } from '../shareLink.js';
 import { PickupCodeInputV2 } from './PickupCodeInputV2.jsx';
 
 const PREVIEW_MAX_BYTES = 8 * 1024 * 1024;
@@ -26,6 +27,7 @@ export function DownloadPageV2({ apiBase }) {
     const [error, setError] = useState('');
     const [textCopied, setTextCopied] = useState(false);
     const [doneWasText, setDoneWasText] = useState(false);
+    const autoSubmitFromLinkRef = useRef(false);
 
     const formatted = formatPickupCodeForApi(code);
     const canLookup = formatted.length === 11 && !busy && phase === 'code';
@@ -75,6 +77,60 @@ export function DownloadPageV2({ apiBase }) {
         };
     }, [phase, meta, apiBase]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const params = new URLSearchParams(window.location.search);
+        const combined = normalizePickupQueryToCombined(params.get('code'));
+        if (!combined) {
+            return;
+        }
+        autoSubmitFromLinkRef.current = true;
+        setCode(combined);
+        params.delete('code');
+        const qs = params.toString();
+        const path = window.location.pathname;
+        window.history.replaceState({}, '', qs ? `${path}?${qs}` : path);
+    }, []);
+
+    const runLookup = useCallback(async () => {
+        setError('');
+        const fmt = formatPickupCodeForApi(code);
+        if (fmt.length !== 11) {
+            setError('Enter the full pickup code (4 characters + 6 digits).');
+            return;
+        }
+        setBusy(true);
+        try {
+            const m = await redeemPickupCode(apiBase, fmt);
+            setMeta(m);
+            setBlob(null);
+            setTextContent(null);
+            setTextCopied(false);
+            setPhase('ready');
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Something went wrong.');
+        } finally {
+            setBusy(false);
+        }
+    }, [apiBase, code]);
+
+    useEffect(() => {
+        if (!autoSubmitFromLinkRef.current || phase !== 'code') {
+            return;
+        }
+        const fmt = formatPickupCodeForApi(code);
+        if (fmt.length !== 11 || busy) {
+            return;
+        }
+        autoSubmitFromLinkRef.current = false;
+        const id = window.setTimeout(() => {
+            runLookup();
+        }, 300);
+        return () => window.clearTimeout(id);
+    }, [code, phase, busy, runLookup]);
+
     const reset = () => {
         setPhase('code');
         setMeta(null);
@@ -87,26 +143,13 @@ export function DownloadPageV2({ apiBase }) {
         setDoneWasText(false);
     };
 
-    const handleLookup = async (e) => {
+    const handleLookup = (e) => {
         e.preventDefault();
-        setError('');
         if (!canLookup) {
             setError('Enter the full pickup code (4 characters + 6 digits).');
             return;
         }
-        setBusy(true);
-        try {
-            const m = await redeemPickupCode(apiBase, formatted);
-            setMeta(m);
-            setBlob(null);
-            setTextContent(null);
-            setTextCopied(false);
-            setPhase('ready');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Something went wrong.');
-        } finally {
-            setBusy(false);
-        }
+        runLookup();
     };
 
     const handleSave = async () => {
