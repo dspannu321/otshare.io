@@ -131,4 +131,52 @@ class ShareFlowTest extends TestCase
         $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup])
             ->assertStatus(422);
     }
+
+    public function test_create_text_share_redeem_download_confirm(): void
+    {
+        $body = "Hello,\nthis is a shared note.";
+
+        $create = $this->postJson('/api/v1/share-text', [
+            'text' => $body,
+            'expires_at' => $this->futureExpiresIso(60),
+            'max_downloads' => 1,
+        ], ['Accept' => 'application/json']);
+
+        $create->assertStatus(201);
+        $pickup = $create->json('pickup_code');
+        $this->assertMatchesRegularExpression('/^[A-Z0-9]{4}-[0-9]{6}$/', $pickup);
+
+        $share = Share::whereNotNull('object_key')->first();
+        $this->assertNotNull($share);
+        $this->assertStringStartsWith('text/plain', (string) $share->mime);
+        $this->assertSame('shared.txt', $share->original_name);
+
+        $redeem = $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup]);
+        $redeem->assertOk();
+        $token = $redeem->json('download_token');
+
+        $dl = $this->get('/api/v1/download?token='.urlencode($token));
+        $dl->assertOk();
+        $this->assertSame($body, Storage::disk(config('otshare.storage_disk'))->get($share->object_key));
+
+        $this->postJson('/api/v1/download/confirm', [
+            'token' => $token,
+            'success' => true,
+        ])->assertOk();
+
+        $this->postJson('/api/v1/redeem', ['pickup_code' => $pickup])
+            ->assertStatus(422);
+    }
+
+    public function test_create_text_share_rejects_empty_text(): void
+    {
+        $res = $this->postJson('/api/v1/share-text', [
+            'text' => "   \n  ",
+            'expires_at' => $this->futureExpiresIso(60),
+            'max_downloads' => 1,
+        ], ['Accept' => 'application/json']);
+
+        $res->assertStatus(422);
+        $res->assertJsonValidationErrors('text');
+    }
 }

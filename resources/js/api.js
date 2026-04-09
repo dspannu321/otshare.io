@@ -34,6 +34,32 @@ export async function createShareWithFile(apiBase, params) {
   return data;
 }
 
+/**
+ * @param {string} apiBase - e.g. /api/v1
+ * @param {{
+ *   text: string,
+ *   expiresAtIso: string,
+ *   maxDownloads: number,
+ * }} params
+ */
+export async function createShareWithText(apiBase, params) {
+  const res = await fetch(`${apiBase}/share-text`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      text: params.text,
+      expires_at: params.expiresAtIso,
+      max_downloads: params.maxDownloads,
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+    throw new Error(msg || `Failed to create text share (${res.status}).`);
+  }
+  return data;
+}
+
 /** @param {string} combined - 10 chars: 4 alnum + 6 digits (no dash) */
 export function formatPickupCodeForApi(combined) {
   const c = (combined || '').replace(/\s/g, '').replace(/-/g, '').toUpperCase();

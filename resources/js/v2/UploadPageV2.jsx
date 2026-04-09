@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import flatpickr from 'flatpickr';
-import { createShareWithFile } from '../api';
+import { createShareWithFile, createShareWithText } from '../api';
 import { formatInAppTimezone, getAppTimezone } from '../appTz';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
@@ -13,11 +13,15 @@ function formatFileSize(bytes) {
 }
 
 export function UploadPageV2({ apiBase }) {
+    const [uploadMode, setUploadMode] = useState('file');
+    const [textBody, setTextBody] = useState('');
     const [file, setFile] = useState(null);
     const [expiryAt, setExpiryAt] = useState(null);
     const [maxDownloads, setMaxDownloads] = useState(1);
     const [step, setStep] = useState('select');
     const [doneResult, setDoneResult] = useState(null);
+    /** @type {'file' | 'text' | null} */
+    const [doneKind, setDoneKind] = useState(null);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -107,9 +111,21 @@ export function UploadPageV2({ apiBase }) {
 
     const submitHandler = async (e) => {
         e.preventDefault();
-        if (!file) {
+        if (uploadMode === 'file' && !file) {
             setError('Choose a file to upload.');
             return;
+        }
+        if (uploadMode === 'text') {
+            const t = textBody.replace(/\r\n/g, '\n');
+            if (!t.trim()) {
+                setError('Enter some text to share.');
+                return;
+            }
+            const bytes = new TextEncoder().encode(t).length;
+            if (bytes > MAX_FILE_SIZE) {
+                setError('Text is too large (max 100MB).');
+                return;
+            }
         }
         if (!expiryAt) {
             setError('Choose when this share should expire.');
@@ -123,15 +139,24 @@ export function UploadPageV2({ apiBase }) {
                 throw new Error('Expiry must be between 1 minute and 7 days from now.');
             }
 
-            const data = await createShareWithFile(apiBase, {
-                file,
-                expiresAtIso: expiryAt.toISOString(),
-                maxDownloads,
-            });
+            const expiresAtIso = expiryAt.toISOString();
+            const data =
+                uploadMode === 'text'
+                    ? await createShareWithText(apiBase, {
+                          text: textBody.replace(/\r\n/g, '\n'),
+                          expiresAtIso,
+                          maxDownloads,
+                      })
+                    : await createShareWithFile(apiBase, {
+                          file,
+                          expiresAtIso,
+                          maxDownloads,
+                      });
             setDoneResult({
                 pickup_code: data.pickup_code,
                 expires_at: data.expires_at,
             });
+            setDoneKind(uploadMode === 'text' ? 'text' : 'file');
             setStep('done');
         } catch (err) {
             const msg = err.message || '';
@@ -153,14 +178,27 @@ export function UploadPageV2({ apiBase }) {
     const reset = () => {
         setStep('select');
         setFile(null);
+        setTextBody('');
         setMaxDownloads(1);
         setDoneResult(null);
+        setDoneKind(null);
         setError('');
         setExpiryAt(null);
         flatpickrRef.current?.clear();
     };
 
+    const switchMode = (mode) => {
+        setUploadMode(mode);
+        setError('');
+        if (mode === 'file') {
+            setTextBody('');
+        } else {
+            setFile(null);
+        }
+    };
+
     if (step === 'uploading') {
+        const isText = uploadMode === 'text';
         return (
             <div className="v2-card p-6 sm:p-10">
                 <div className="flex flex-col items-center justify-center py-10">
@@ -177,8 +215,10 @@ export function UploadPageV2({ apiBase }) {
                             </svg>
                         </div>
                     </div>
-                    <p className="text-center text-base font-semibold text-white">Uploading</p>
-                    <p className="mt-2 text-center text-sm text-slate-500">Sending your file — hang tight.</p>
+                    <p className="text-center text-base font-semibold text-white">{isText ? 'Creating share' : 'Uploading'}</p>
+                    <p className="mt-2 text-center text-sm text-slate-500">
+                        {isText ? 'Securing your text — hang tight.' : 'Sending your file — hang tight.'}
+                    </p>
                 </div>
             </div>
         );
@@ -196,7 +236,7 @@ export function UploadPageV2({ apiBase }) {
                     <div>
                         <h2 className="text-xl font-bold tracking-tight text-white">You&apos;re all set</h2>
                         <p className="mt-1 text-sm leading-relaxed text-slate-400">
-                            Send the pickup code to the recipient. They can download up to {maxDownloads} time
+                            Send the pickup code to the recipient. They can unlock up to {maxDownloads} time
                             {maxDownloads === 1 ? '' : 's'} before the link expires.
                         </p>
                     </div>
@@ -246,7 +286,7 @@ export function UploadPageV2({ apiBase }) {
                 )}
 
                 <button type="button" onClick={reset} className="v2-btn-ghost mt-6 w-full border border-white/10 py-3 text-slate-300 hover:text-white">
-                    Share another file
+                    {doneKind === 'text' ? 'Share something else' : 'Share another file'}
                 </button>
             </div>
         );
@@ -254,12 +294,51 @@ export function UploadPageV2({ apiBase }) {
 
     return (
             <div className="v2-card p-6 sm:p-10">
-            <h2 className="mb-8 text-lg font-bold text-white">Create a share</h2>
+            <h2 className="mb-6 text-lg font-bold text-white">Create a share</h2>
+
+            <div className="mb-8 flex rounded-2xl border border-white/[0.08] bg-black/20 p-1">
+                <button
+                    type="button"
+                    onClick={() => switchMode('file')}
+                    className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                        uploadMode === 'file'
+                            ? 'bg-white/[0.1] text-white shadow-sm ring-1 ring-white/10'
+                            : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                >
+                    File
+                </button>
+                <button
+                    type="button"
+                    onClick={() => switchMode('text')}
+                    className={`flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                        uploadMode === 'text'
+                            ? 'bg-white/[0.1] text-white shadow-sm ring-1 ring-white/10'
+                            : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                >
+                    Text
+                </button>
+            </div>
 
             <form onSubmit={submitHandler} className="space-y-6">
                 <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">File</label>
-                    {!file ? (
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        {uploadMode === 'text' ? 'Text' : 'File'}
+                    </label>
+                    {uploadMode === 'text' ? (
+                        <textarea
+                            value={textBody}
+                            onChange={(e) => {
+                                setTextBody(e.target.value);
+                                setError('');
+                            }}
+                            placeholder="Paste or type what you want to share…"
+                            rows={10}
+                            className="v2-input min-h-[200px] resize-y font-mono text-sm leading-relaxed"
+                            spellCheck="true"
+                        />
+                    ) : !file ? (
                         <div
                             role="button"
                             tabIndex={0}
@@ -319,6 +398,9 @@ export function UploadPageV2({ apiBase }) {
                             <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" />
                         </div>
                     )}
+                    {uploadMode === 'text' && (
+                        <p className="mt-2 text-xs text-slate-600">Plain text · up to 100MB (UTF-8)</p>
+                    )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -364,7 +446,11 @@ export function UploadPageV2({ apiBase }) {
                     </div>
                 )}
 
-                <button type="submit" disabled={!file || !expiryAt} className="v2-btn-primary">
+                <button
+                    type="submit"
+                    disabled={!expiryAt || (uploadMode === 'file' ? !file : !textBody.trim())}
+                    className="v2-btn-primary"
+                >
                     Create share
                 </button>
             </form>

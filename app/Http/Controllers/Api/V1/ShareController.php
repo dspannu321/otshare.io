@@ -19,6 +19,74 @@ class ShareController extends Controller
     ) {}
 
     /**
+     * Free tier: create a text share — UTF-8 body + expiry + max downloads (same lifecycle as file shares).
+     */
+    public function storeText(Request $request): JsonResponse
+    {
+        $maxBytes = max(1, (int) config('otshare.max_file_size'));
+
+        $validated = $request->validate([
+            'text' => ['required', 'string'],
+            'expires_at' => ['required', 'date'],
+            'max_downloads' => ['required', 'integer', 'min:1', 'max:5'],
+        ]);
+
+        $text = $validated['text'];
+        if (strlen($text) > $maxBytes) {
+            throw ValidationException::withMessages([
+                'text' => ['Text exceeds maximum size allowed.'],
+            ]);
+        }
+        if ($text === '' || trim($text) === '') {
+            throw ValidationException::withMessages([
+                'text' => ['Text cannot be empty.'],
+            ]);
+        }
+
+        $expiresAt = Carbon::parse($validated['expires_at']);
+        $this->assertExpiryWindow($expiresAt);
+
+        $pickupCode = $this->pickupCode->generate();
+        $shortId = $this->pickupCode->shortIdFromCode($pickupCode);
+        $disk = config('otshare.storage_disk');
+
+        $share = DB::transaction(function () use ($expiresAt, $validated, $pickupCode, $shortId, $text, $disk) {
+            $share = Share::create([
+                'short_id' => $shortId,
+                'pickup_hash' => $this->pickupCode->hash($pickupCode),
+                'expires_at' => $expiresAt,
+                'max_downloads' => $validated['max_downloads'],
+                'kdf' => null,
+                'crypto_meta' => null,
+            ]);
+
+            $relativePath = 'shares/'.$share->id.'/shared.txt';
+            Storage::disk($disk)->put($relativePath, $text);
+
+            $sizeBytes = strlen($text);
+
+            $share->update([
+                'object_key' => $relativePath,
+                'crypto_meta' => [],
+                'kdf' => null,
+                'original_name' => 'shared.txt',
+                'mime' => 'text/plain; charset=utf-8',
+                'size_bytes' => $sizeBytes,
+            ]);
+
+            return $share->fresh();
+        });
+
+        return response()->json([
+            'id' => $share->id,
+            'pickup_code' => $pickupCode,
+            'expires_at' => $share->expires_at->toIso8601String(),
+            'size_bytes' => $share->size_bytes,
+            'original_name' => $share->original_name,
+        ], 201);
+    }
+
+    /**
      * Free tier: create a share in one step — multipart file + expiry + max downloads (plaintext storage).
      */
     public function store(Request $request): JsonResponse
@@ -32,17 +100,7 @@ class ShareController extends Controller
         ]);
 
         $expiresAt = Carbon::parse($validated['expires_at']);
-        $now = now();
-        if ($expiresAt->lessThanOrEqualTo($now->copy()->addMinute())) {
-            throw ValidationException::withMessages([
-                'expires_at' => ['Expiry must be at least 1 minute from now.'],
-            ]);
-        }
-        if ($expiresAt->greaterThan($now->copy()->addDays(7))) {
-            throw ValidationException::withMessages([
-                'expires_at' => ['Expiry cannot be more than 7 days from now.'],
-            ]);
-        }
+        $this->assertExpiryWindow($expiresAt);
 
         $file = $request->file('file');
         $originalName = $this->sanitizeOriginalFilename($file->getClientOriginalName());
@@ -87,6 +145,21 @@ class ShareController extends Controller
             'size_bytes' => $share->size_bytes,
             'original_name' => $share->original_name,
         ], 201);
+    }
+
+    private function assertExpiryWindow(Carbon $expiresAt): void
+    {
+        $now = now();
+        if ($expiresAt->lessThanOrEqualTo($now->copy()->addMinute())) {
+            throw ValidationException::withMessages([
+                'expires_at' => ['Expiry must be at least 1 minute from now.'],
+            ]);
+        }
+        if ($expiresAt->greaterThan($now->copy()->addDays(7))) {
+            throw ValidationException::withMessages([
+                'expires_at' => ['Expiry cannot be more than 7 days from now.'],
+            ]);
+        }
     }
 
     private function sanitizeOriginalFilename(?string $name): ?string

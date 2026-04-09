@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->middleware('security.headers')->group(function () {
     Route::post('share', [ShareController::class, 'store'])->middleware('throttle:shares_create');
+    Route::post('share-text', [ShareController::class, 'storeText'])->middleware('throttle:shares_create');
     Route::post('redeem', [RedeemController::class, 'redeem'])->middleware('throttle:redeem');
     Route::get('download', [DownloadController::class, 'download'])->middleware('throttle:download');
     Route::post('download/confirm', [DownloadController::class, 'confirm'])->middleware('throttle:download');
